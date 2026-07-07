@@ -22,12 +22,14 @@ import { store, persistor } from './src/store';
 import { RootNavigator, navigationRef } from './src/navigation';
 import { useTheme } from './src/theme';
 import {
+  getFCMToken,
   getInitialNotification,
   hasNotificationPermission,
   onForegroundMessage,
   onNotificationOpenedApp,
   openAppSettings,
   requestNotificationPermission,
+  onFCMTokenRefresh,
 } from './src/services/fcm';
 import {
   ensureGatePassChannel,
@@ -54,7 +56,7 @@ import {
 } from './src/services/visitorCallBridge';
 import { useSelector } from 'react-redux';
 import type { RootState } from './src/store';
-import { updateVoipToken } from './src/api/getpass';
+import { updateVoipToken, updateFcmToken } from './src/api/getpass';
 
 function NotificationImportanceOverlay({
   onAllow,
@@ -157,13 +159,41 @@ function AppContent() {
   const [permissionDenied, setPermissionDenied] = useState(false);
   const residentId = useSelector((state: RootState) => state.auth.user?.id);
 
+  // ─── Send the FCM push token to the backend ─────────────────────────
+  const sendFCM = useCallback(async (token: string) => {
+    if (residentId == null) return;
+    try {
+      await updateFcmToken(residentId, token);
+    } catch {
+      // Best-effort
+    }
+  }, [residentId]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const unsub = onFCMTokenRefresh((token: string) => {
+      if (!cancelled) sendFCM(token);
+    });
+    return () => {
+      cancelled = true;
+      unsub();
+    };
+  }, [sendFCM]);
+
   const askPermission = useCallback(async (isRetry = false) => {
     const granted = await requestNotificationPermission();
     setPermissionDenied(!granted);
     if (!granted && isRetry) {
       openAppSettings();
     }
-  }, []);
+    // Fetch and send token on startup if permitted
+    if (granted) {
+      const token = await getFCMToken();
+      if (token) {
+        sendFCM(token);
+      }
+    }
+  }, [sendFCM]);
 
   useEffect(() => {
     ensureGatePassChannel();

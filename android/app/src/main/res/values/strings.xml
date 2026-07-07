@@ -1,4 +1,4 @@
 <resources>
     <string name="app_name">AapnaSmartGate</string>
-    <string name="default_notification_channel_id">default</string>
+    <string name="default_notification_channel_id">gatepass_alerts</string>
 </resources>

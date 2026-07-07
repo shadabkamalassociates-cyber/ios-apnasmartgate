@@ -43,7 +43,7 @@ export default function ApproveDenyScreen({ route, navigation }: Props) {
           if (!vehicle && match.visitor?.vehicleinfo) setVisitorVehicle(match.visitor.vehicleinfo);
         }
       })
-      .catch(() => {})
+      .catch(() => { })
       .finally(() => setResolving(false));
   }, [requestId, visitorName, user?.flat_id, phone, vehicle]);
 
@@ -123,7 +123,7 @@ export default function ApproveDenyScreen({ route, navigation }: Props) {
         activeOpacity={0.8}
         hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
       >
-        <Ionicons name="chevron-back" size={26} color="#FFFFFF" />
+        <Ionicons name="chevron-back" size={26} color={colors.text} />
       </TouchableOpacity>
       <View style={styles.card}>
         <View style={styles.avatarCircle}>
@@ -232,14 +232,13 @@ function makeStyles(colors: ThemeColors) {
   return StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: 'rgba(0,0,0,0.5)',
+      backgroundColor: colors.surface,
       justifyContent: 'center',
       alignItems: 'center',
-      padding: 24,
     },
     screenBackBtn: {
       position: 'absolute',
-      top: 48,
+      top: 54,
       left: 20,
       zIndex: 2,
       width: 44,
@@ -247,17 +246,15 @@ function makeStyles(colors: ThemeColors) {
       borderRadius: 22,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: 'rgba(0,0,0,0.35)',
+      backgroundColor: colors.surfaceVariant,
     },
     card: {
+      flex: 1,
       width: '100%',
-      maxWidth: 400,
       backgroundColor: colors.surface,
-      borderRadius: 24,
       padding: 24,
       alignItems: 'center',
-      borderWidth: 1,
-      borderColor: colors.border,
+      justifyContent: 'center',
     },
     avatarCircle: {
       width: 72,

@@ -80,20 +80,25 @@ class VisitorAlertActivity : AppCompatActivity() {
       resolve("visitorId", "gatepassId", "requestId")?.let { putString("visitorId", it) }
     }
 
+    val avatarView = findViewById<TextView>(R.id.visitorAlertAvatar)
     val titleView = findViewById<TextView>(R.id.visitorAlertTitle)
-    val bodyView = findViewById<TextView>(R.id.visitorAlertBody)
     val nameValue = findViewById<TextView>(R.id.visitorAlertNameValue)
-    val flatValue = findViewById<TextView>(R.id.visitorAlertFlatValue)
     val phoneValue = findViewById<TextView>(R.id.visitorAlertPhoneValue)
     val vehicleValue = findViewById<TextView>(R.id.visitorAlertVehicleValue)
-    val closeButton = findViewById<Button>(R.id.visitorAlertCloseBtn)
+    val closeButton = findViewById<TextView>(R.id.visitorAlertCloseBtn)
     val approveButton = findViewById<Button>(R.id.visitorAlertApproveBtn)
     val rejectButton = findViewById<Button>(R.id.visitorAlertRejectBtn)
 
     titleView.text = resolve("title") ?: "Visitor Entry Request"
-    bodyView.text = resolve("body") ?: "A visitor is waiting at the gate."
-    nameValue.text = resolve("name", "visitorName") ?: "-"
-    flatValue.text = resolve("flat", "flatNo") ?: "-"
+    
+    val visitorName = resolve("name", "visitorName") ?: "-"
+    nameValue.text = visitorName
+    if (visitorName != "-" && visitorName.isNotEmpty()) {
+        avatarView.text = visitorName.substring(0, 1).uppercase()
+    } else {
+        avatarView.text = "V"
+    }
+
     phoneValue.text = resolve("phone") ?: "-"
     vehicleValue.text = resolve("vehicle", "vehicleinfo") ?: "-"
 
@@ -125,22 +130,28 @@ class VisitorAlertActivity : AppCompatActivity() {
   private fun startAlerting() {
     stopAlerting()
 
-    val alertUri =
-      RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
+    var alertUri = android.net.Uri.parse("android.resource://" + packageName + "/" + R.raw.mygate)
+    if (alertUri == null) {
+      alertUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
         ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
+    }
 
     if (alertUri != null) {
-      mediaPlayer = MediaPlayer().apply {
-        setAudioAttributes(
-          AudioAttributes.Builder()
-            .setUsage(AudioAttributes.USAGE_ALARM)
-            .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-            .build()
-        )
-        setDataSource(this@VisitorAlertActivity, alertUri)
-        isLooping = true
-        prepare()
-        start()
+      try {
+        mediaPlayer = MediaPlayer().apply {
+          setAudioAttributes(
+            AudioAttributes.Builder()
+              .setUsage(AudioAttributes.USAGE_ALARM)
+              .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+              .build()
+          )
+          setDataSource(this@VisitorAlertActivity, alertUri)
+          isLooping = true
+          prepare()
+          start()
+        }
+      } catch (e: Exception) {
+        e.printStackTrace()
       }
     }
 

@@ -76,16 +76,13 @@ type HomeCommunityPost = {
 export default function HomeScreen({
   navigation,
 }: {
-  navigation: {
-    navigate: (a: string, b?: any) => void;
-    setOptions: (options: any) => void;
-  };
+  navigation: any;
 }) {
   const { colors } = useTheme();
   const { user } = useAuth();
   const { localAvatarDataUrl } = useLocalProfileAvatar(user?.id, { refetchOnFocus: true });
   const serverAvatarUri = useMemo(
-    () => resolveProfileImageUrl(user?.profile_image ?? undefined, user?.profile_image),
+    () => resolveProfileImageUrl(user?.profile_image ?? undefined, user?.profile_image ?? undefined),
     [user?.profile_image]
   );
   const headerAvatarUri = localAvatarDataUrl ?? serverAvatarUri;

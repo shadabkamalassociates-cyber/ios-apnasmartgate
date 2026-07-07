@@ -3,8 +3,24 @@
  * Handles permission, token retrieval, and notification handlers.
  */
 
-import messaging from '@react-native-firebase/messaging';
+import {
+  getMessaging,
+  hasPermission as fcmHasPermission,
+  requestPermission as fcmRequestPermission,
+  AuthorizationStatus,
+  isDeviceRegisteredForRemoteMessages,
+  registerDeviceForRemoteMessages,
+  getToken,
+  onTokenRefresh,
+  setBackgroundMessageHandler as fcmSetBackgroundMessageHandler,
+  onMessage,
+  onNotificationOpenedApp as fcmOnNotificationOpenedApp,
+  getInitialNotification as fcmGetInitialNotification,
+} from '@react-native-firebase/messaging';
+import type { FirebaseMessagingTypes } from '@react-native-firebase/messaging';
 import { Linking, PermissionsAndroid, Platform } from 'react-native';
+
+const messaging = getMessaging();
 
 /** Open the app's notification/settings screen so the user can enable notifications. */
 export function openAppSettings(): Promise<void> {
@@ -20,10 +36,10 @@ export async function hasNotificationPermission(): Promise<boolean> {
       );
       if (!granted) return false;
     }
-    const authStatus = await messaging().hasPermission();
+    const authStatus = await fcmHasPermission(messaging);
     return (
-      authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
-      authStatus === messaging.AuthorizationStatus.PROVISIONAL
+      authStatus === AuthorizationStatus.AUTHORIZED ||
+      authStatus === AuthorizationStatus.PROVISIONAL
     );
   } catch {
     return false;
@@ -47,10 +63,10 @@ export async function requestNotificationPermission(): Promise<boolean> {
       }
     }
 
-    const authStatus = await messaging().requestPermission();
+    const authStatus = await fcmRequestPermission(messaging);
     const enabled =
-      authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
-      authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+      authStatus === AuthorizationStatus.AUTHORIZED ||
+      authStatus === AuthorizationStatus.PROVISIONAL;
     return enabled;
   } catch {
     return false;
@@ -65,23 +81,32 @@ export async function getFCMToken(): Promise<string | null> {
       console.warn('[FCM] Notification permission not granted');
       return null;
     }
-    if (!messaging().isDeviceRegisteredForRemoteMessages) {
-      await messaging().registerDeviceForRemoteMessages();
+    if (!isDeviceRegisteredForRemoteMessages(messaging)) {
+      await registerDeviceForRemoteMessages(messaging);
     }
 
-    // On iOS the APNs token may not be ready immediately after permission is
-    // granted (native registration is async). Retry a few times with a short
-    // delay so we don't falsely report "no token".
-    const maxAttempts = Platform.OS === 'ios' ? 3 : 1;
+    // On both platforms the native token generation may not be ready immediately 
+    // or Google Play Services might be busy. Retry a few times with a short
+    // delay so we don't falsely report "no token" or fail on SERVICE_NOT_AVAILABLE.
+    const maxAttempts = 3;
     for (let i = 0; i < maxAttempts; i++) {
       try {
-        const token = await messaging().getToken();
-        if (token) return token;
+        const token = await getToken(messaging);
+        if (token) {
+          console.log('[FCM] Successfully retrieved token:', token);
+          return token;
+        }
       } catch (e) {
         console.warn(`[FCM] getToken attempt ${i + 1} failed:`, e);
+        // If it's a SERVICE_NOT_AVAILABLE or similar corrupted state, clearing the token cache can sometimes fix it
+        try {
+          await messaging.deleteToken();
+        } catch (deleteError) {
+          // ignore
+        }
       }
       if (i < maxAttempts - 1) {
-        await new Promise<void>(resolve => setTimeout(() => resolve(), 1500));
+        await new Promise<void>(resolve => setTimeout(() => resolve(), 2500)); // Increased delay
       }
     }
 
@@ -95,22 +120,22 @@ export async function getFCMToken(): Promise<string | null> {
 
 /** Subscribe to token refresh (e.g. when app is restored). Call with a callback to send new token to backend. */
 export function onFCMTokenRefresh(callback: (token: string) => void | Promise<void>): () => void {
-  const unsubscribe = messaging().onTokenRefresh(callback);
+  const unsubscribe = onTokenRefresh(messaging, callback);
   return unsubscribe;
 }
 
 /** Set handler for messages received while app is in background/quit. Must be called outside of any component (e.g. in index.js). */
 export function setBackgroundMessageHandler(
-  handler: (message: import('@react-native-firebase/messaging').FirebaseMessagingTypes.RemoteMessage) => Promise<void>
+  handler: (message: FirebaseMessagingTypes.RemoteMessage) => Promise<void>
 ): void {
-  messaging().setBackgroundMessageHandler(handler);
+  fcmSetBackgroundMessageHandler(messaging, handler);
 }
 
 /** Foreground message handler. Use in a useEffect to show in-app UI when a notification is received in foreground. */
 export function onForegroundMessage(
-  callback: (message: import('@react-native-firebase/messaging').FirebaseMessagingTypes.RemoteMessage) => void
+  callback: (message: FirebaseMessagingTypes.RemoteMessage) => void
 ): () => void {
-  const unsubscribe = messaging().onMessage(callback);
+  const unsubscribe = onMessage(messaging, callback);
   return unsubscribe;
 }
 
@@ -121,17 +146,17 @@ export function onForegroundMessage(
  * setBackgroundMessageHandler, so we need this to handle them.
  */
 export function onNotificationOpenedApp(
-  callback: (message: import('@react-native-firebase/messaging').FirebaseMessagingTypes.RemoteMessage) => void
+  callback: (message: FirebaseMessagingTypes.RemoteMessage) => void
 ): () => void {
-  return messaging().onNotificationOpenedApp(callback);
+  return fcmOnNotificationOpenedApp(messaging, callback);
 }
 
 /**
  * Returns the notification that caused the app to open from a killed state.
  * Null if the app was not opened from a notification.
  */
-export async function getInitialNotification(): Promise<import('@react-native-firebase/messaging').FirebaseMessagingTypes.RemoteMessage | null> {
-  return messaging().getInitialNotification();
+export async function getInitialNotification(): Promise<FirebaseMessagingTypes.RemoteMessage | null> {
+  return fcmGetInitialNotification(messaging);
 }
 
 /** Check if running on a device that supports FCM (not simulator on iOS for token). Android emulator can get token. */

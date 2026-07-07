@@ -35,7 +35,7 @@ export default function RootNavigator() {
           <Stack.Screen
             name="ApproveDeny"
             component={ApproveDenyScreen}
-            options={{ presentation: 'transparentModal', animation: 'fade' }}
+            options={{ presentation: 'fullScreenModal', animation: 'fade' }}
           />
           <Stack.Screen name="NotificationCheck" component={NotificationCheckScreen} />
           <Stack.Screen

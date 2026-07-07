@@ -43,7 +43,11 @@ export async function openFullScreenIntentSettings(): Promise<void> {
 
 export async function cancelAllNativeNotifications(): Promise<void> {
   if (!nativeModule?.cancelAllNotifications) return;
-  await nativeModule.cancelAllNotifications();
+  try {
+    await nativeModule.cancelAllNotifications();
+  } catch (e) {
+    console.warn('cancelAllNativeNotifications failed:', e);
+  }
 }
 
 export async function isBatteryOptimizationDisabled(): Promise<boolean> {

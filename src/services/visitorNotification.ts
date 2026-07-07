@@ -34,7 +34,7 @@ type VisitorNotificationData = NonNullable<FirebaseMessagingTypes.RemoteMessage[
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
-const CHANNEL_ID = 'mygate';
+const CHANNEL_ID = 'gatepass_alerts';
 const CHANNEL_NAME = 'Gate Pass';
 const SOUND_NAME = 'mygate';
 
@@ -148,7 +148,20 @@ export async function ensureGatePassChannel(): Promise<void> {
 export async function showGatePassNotification(
   message: FirebaseMessagingTypes.RemoteMessage,
 ): Promise<void> {
-  if (!isNewVisitorMessage(message)) return;
+  if (!isNewVisitorMessage(message)) {
+    if (message.notification?.title || message.notification?.body) {
+      await ensureGatePassChannel();
+      await notifee.displayNotification({
+        title: message.notification.title,
+        body: message.notification.body,
+        android: {
+          channelId: CHANNEL_ID,
+          smallIcon: 'ic_launcher',
+        }
+      });
+    }
+    return;
+  }
   const payload = extractVisitorPayload(message);
   if (!payload) return;
 
