@@ -9,6 +9,7 @@ import { loadResidentProfile, writeProfileExtras, resolveResidenceInBackground }
 import { useDispatch, useSelector } from 'react-redux';
 import type { RootState, AppDispatch } from '../store';
 import { setAuthUser, setAuthLoading, clearAuth } from '../store/authSlice';
+import { getVoipToken } from '../services/visitorCallBridge';
 
 export type AuthUser = {
   id?: string | number;
@@ -146,6 +147,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const verifyOtpAndLogin = useCallback(async (phone: string, hashedOtp: string, otp: string): Promise<AuthResult> => {
     const fcmToken = await getFCMToken();
+    const voipToken = await getVoipToken();
+    console.log("========== THE VOIP TOKEN IS: ==========", voipToken);
     if (!fcmToken) {
       return {
         success: false,
@@ -199,6 +202,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (residentId != null) {
       try {
         await getpassApi.updateFcmToken(residentId, fcmToken);
+        if (voipToken) {
+          await getpassApi.updateVoipToken(residentId, voipToken);
+        }
       } catch {
         // Best-effort: if token update fails, still allow login.
       }
@@ -226,6 +232,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           code: NOTIFICATION_PERMISSION_REQUIRED_CODE,
         };
       }
+      
+      const voipToken = await getVoipToken();
+      
       try {
         const res = await residentApi.residentSignUp({
           ...data,
@@ -233,6 +242,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           fcm_tokens: fcmToken,
           fcm_token: fcmToken,
           fcmToken: fcmToken,
+          voip_token: voipToken || undefined,
           profileImage: data.profileImage,
         });
         if (res.success && res.token) {

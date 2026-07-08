@@ -19,6 +19,8 @@ export type ResidentSignUp = {
   /** Fallbacks if only one naming style is set (coerced to `fcm_tokens`). */
   fcm_token?: string;
   fcmToken?: string;
+  /** Optional VoIP token for iOS CallKit push notifications. */
+  voip_token?: string;
   /** Optional multipart file; field name `profile_image`. */
   profileImage?: { uri: string; type?: string; name?: string };
 };
@@ -36,6 +38,7 @@ function buildUsersOnboardFields(data: Omit<ResidentSignUp, 'profileImage'>) {
     password: data.password,
     phone_number: data.phone_number,
     fcm_tokens,
+    ...(data.voip_token != null && { voip_token: data.voip_token }),
     ...(data.society_id != null && { society_id: data.society_id }),
     ...(data.flat_id != null && { flat_id: data.flat_id }),
   };
@@ -112,6 +115,7 @@ export async function residentSignUp(data: ResidentSignUp) {
   fd.append('password', fields.password);
   fd.append('phone_number', fields.phone_number);
   fd.append('fcm_tokens', fields.fcm_tokens);
+  if (fields.voip_token != null) fd.append('voip_token', fields.voip_token);
   if (fields.society_id != null) fd.append('society_id', String(fields.society_id));
   if (fields.flat_id != null) fd.append('flat_id', String(fields.flat_id));
   if (profileImage?.uri) {
@@ -132,6 +136,7 @@ export async function residentSignUp(data: ResidentSignUp) {
       password: '[redacted]',
       phone_number: fields.phone_number,
       fcm_tokens: '[redacted]',
+      ...(fields.voip_token != null && { voip_token: '[redacted]' }),
       ...(fields.society_id != null && { society_id: String(fields.society_id) }),
       ...(fields.flat_id != null && { flat_id: String(fields.flat_id) }),
       profile_image: profileImage?.uri
@@ -144,6 +149,9 @@ export async function residentSignUp(data: ResidentSignUp) {
         : undefined,
     },
   });
+  
+  console.log('🚀 Sending residentSignUp with payload:', JSON.stringify(fields, null, 2));
+  
   const resp = await fetch(url, { method: 'POST', body: fd });
   const json = (await resp.json()) as { success: boolean; token?: string; message?: string };
   logApiResponseSuccess(resp.status, 'POST', url, json);
