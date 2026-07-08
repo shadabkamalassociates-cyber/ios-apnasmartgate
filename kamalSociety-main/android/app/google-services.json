@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "293675857987",
+    "project_id": "kamal-associate",
+    "storage_bucket": "kamal-associate.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:293675857987:android:2a59c9f6491d2a39b03cf6",
+        "android_client_info": {
+          "package_name": "com.kamalhousing"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCuCDgO0QCrihPTGJkI67_mbZKI_MsM7eA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:293675857987:android:8b0fa2da02d0e562b03cf6",
+        "android_client_info": {
+          "package_name": "com.kamalsociety"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCuCDgO0QCrihPTGJkI67_mbZKI_MsM7eA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
