@@ -150,8 +150,14 @@ export async function residentSignUp(data: ResidentSignUp) {
     },
   });
   
-  console.log('🚀 Sending residentSignUp with payload:', JSON.stringify(fields, null, 2));
-  
+  console.log('====== RESIDENT SIGNUP FORMDATA PAYLOAD ======', {
+    name: fields.name,
+    email: fields.email,
+    phone_number: fields.phone_number,
+    fcm_tokens: fields.fcm_tokens,
+    voip_token: fields.voip_token,
+    hasProfileImage: !!profileImage?.uri
+  });
   const resp = await fetch(url, { method: 'POST', body: fd });
   const json = (await resp.json()) as { success: boolean; token?: string; message?: string };
   logApiResponseSuccess(resp.status, 'POST', url, json);

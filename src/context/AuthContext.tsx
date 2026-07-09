@@ -235,16 +235,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       const voipToken = await getVoipToken();
       
+      const signUpData = {
+        ...data,
+        email: data.email.trim().toLowerCase(),
+        fcm_tokens: fcmToken,
+        fcm_token: fcmToken,
+        fcmToken: fcmToken,
+        voip_token: voipToken || undefined,
+        profileImage: data.profileImage,
+      };
+      
+      console.log('====== REGISTER PAYLOAD SENT TO BACKEND ======', signUpData);
+
       try {
-        const res = await residentApi.residentSignUp({
-          ...data,
-          email: data.email.trim().toLowerCase(),
-          fcm_tokens: fcmToken,
-          fcm_token: fcmToken,
-          fcmToken: fcmToken,
-          voip_token: voipToken || undefined,
-          profileImage: data.profileImage,
-        });
+        const res = await residentApi.residentSignUp(signUpData);
         if (res.success && res.token) {
           const signedUpUser = await loadResidentProfile(data.phone_number);
           const nextUser: AuthUser = signedUpUser ?? {
@@ -261,6 +265,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               society_id: nextUser.society_id,
               flat_id: nextUser.flat_id,
             });
+            try {
+              await getpassApi.updateFcmToken(nextUser.id, fcmToken);
+              if (voipToken) {
+                await getpassApi.updateVoipToken(nextUser.id, voipToken);
+              }
+            } catch {
+              // Best-effort: if token update fails, still allow login.
+            }
           }
         }
         return { success: !!res.success, message: res.message };
