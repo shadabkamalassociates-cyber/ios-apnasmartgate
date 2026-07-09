@@ -147,8 +147,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const verifyOtpAndLogin = useCallback(async (phone: string, hashedOtp: string, otp: string): Promise<AuthResult> => {
     const fcmToken = await getFCMToken();
-    const voipToken = await getVoipToken();
-    console.log("========== THE VOIP TOKEN IS: ==========", voipToken);
     if (!fcmToken) {
       return {
         success: false,
@@ -202,9 +200,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (residentId != null) {
       try {
         await getpassApi.updateFcmToken(residentId, fcmToken);
-        if (voipToken) {
-          await getpassApi.updateVoipToken(residentId, voipToken);
-        }
       } catch {
         // Best-effort: if token update fails, still allow login.
       }
@@ -233,15 +228,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         };
       }
       
-      const voipToken = await getVoipToken();
-      
       const signUpData = {
         ...data,
         email: data.email.trim().toLowerCase(),
         fcm_tokens: fcmToken,
         fcm_token: fcmToken,
         fcmToken: fcmToken,
-        voip_token: voipToken || undefined,
         profileImage: data.profileImage,
       };
       
@@ -267,9 +259,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             });
             try {
               await getpassApi.updateFcmToken(nextUser.id, fcmToken);
-              if (voipToken) {
-                await getpassApi.updateVoipToken(nextUser.id, voipToken);
-              }
             } catch {
               // Best-effort: if token update fails, still allow login.
             }

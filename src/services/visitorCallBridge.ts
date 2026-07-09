@@ -54,12 +54,8 @@ const nativeEmitter =
 
 /** Returns the current VoIP push token (hex string) or null if not yet issued. */
 export async function getVoipToken(): Promise<string | null> {
-  if (Platform.OS !== 'ios' || !nativeModule?.getVoipToken) return null;
-  try {
-    return await nativeModule.getVoipToken();
-  } catch {
-    return null;
-  }
+  // VoIP tokens disabled to force standard APNs/FCM banners instead of CallKit.
+  return null;
 }
 
 /**
@@ -107,14 +103,8 @@ export async function simulateIncomingVisitorCall(
 export function subscribeVoipTokenUpdated(
   listener: (token: string) => void,
 ): { remove: () => void } {
-  if (!nativeEmitter) return { remove: () => {} };
-  const sub: EmitterSubscription = nativeEmitter.addListener(
-    'VisitorCallVoipTokenUpdated',
-    (event: { token?: string }) => {
-      if (event?.token) listener(event.token);
-    },
-  );
-  return { remove: () => sub.remove() };
+  // Disabled
+  return { remove: () => {} };
 }
 
 export function subscribeVisitorCallAccepted(

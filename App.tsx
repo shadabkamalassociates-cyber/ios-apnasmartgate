@@ -354,38 +354,8 @@ function AppContent() {
     };
   }, [askPermission]);
 
-  // ─── Send the VoIP push token to the backend ─────────────────────────
-  //
-  // The VoIP token is separate from the FCM token. It can become available
-  // before, during, or after login, and may be re-issued by iOS later, so
-  // we register it whenever (token, residentId) both exist and on every
-  // change of either.
-  useEffect(() => {
-    let cancelled = false;
-
-    const send = async (token: string) => {
-      if (cancelled) return;
-      if (residentId == null) return;
-      try {
-        await updateVoipToken(residentId, token);
-      } catch {
-        // Best-effort; will retry on next token / login change.
-      }
-    };
-
-    getVoipToken().then((t) => {
-      if (t) send(t);
-    });
-
-    const tokenSub = subscribeVoipTokenUpdated((token) => {
-      send(token);
-    });
-
-    return () => {
-      cancelled = true;
-      tokenSub.remove();
-    };
-  }, [residentId]);
+  // VoIP token logic has been completely removed.
+  // The backend now relies entirely on FCM tokens to send standard push notification banners.
 
   const navigationTheme = useMemo(
     () => ({

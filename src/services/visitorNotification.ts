@@ -126,16 +126,15 @@ export async function ensureGatePassChannel(): Promise<void> {
 
   await notifee.setNotificationCategories([
     {
-      id: 'gatepass',
+      id: 'gatepass_v2',
       actions: [
-        // foreground: false + authenticationRequired: false → can be tapped
-        // directly from the lock screen without unlocking the device.
-        { id: 'approve', title: 'APPROVE', foreground: false, authenticationRequired: false },
+        // foreground: true → clicking the button opens the app and unlocks the device.
+        { id: 'approve', title: 'APPROVE', foreground: true, authenticationRequired: true },
         {
           id: 'deny',
           title: 'DENY',
-          foreground: false,
-          authenticationRequired: false,
+          foreground: true,
+          authenticationRequired: true,
           destructive: true,
         },
       ],
@@ -234,7 +233,7 @@ export async function showGatePassNotification(
     },
     ios: {
       sound: 'mygate.mp3',
-      categoryId: 'gatepass',
+      categoryId: 'gatepass_v2',
       // Break through Focus / DND so the resident actually hears the alert.
       // 'critical' would also bypass the silent switch but requires the
       // Apple-granted "Critical Alerts" entitlement.
