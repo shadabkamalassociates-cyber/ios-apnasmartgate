@@ -34,7 +34,7 @@ type VisitorNotificationData = NonNullable<FirebaseMessagingTypes.RemoteMessage[
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
-const CHANNEL_ID = 'mygate';
+const CHANNEL_ID = 'mygate_call_v4';
 const CHANNEL_NAME = 'Gate Pass';
 const SOUND_NAME = 'mygate';
 
@@ -206,8 +206,10 @@ export async function showGatePassNotification(
       importance: AndroidImportance.HIGH,
       visibility: AndroidVisibility.PUBLIC,
       sound: SOUND_NAME,
+      loopSound: true,
+      ongoing: true,
       smallIcon: 'ic_launcher',
-      pressAction: { id: 'default' },
+      pressAction: { id: 'default', launchActivity: ANDROID_VISITOR_ALERT_ACTIVITY },
       fullScreenAction: {
         id: 'default',
         launchActivity: ANDROID_VISITOR_ALERT_ACTIVITY,

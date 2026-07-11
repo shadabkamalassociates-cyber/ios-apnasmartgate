@@ -125,11 +125,9 @@ class VisitorAlertActivity : AppCompatActivity() {
   private fun startAlerting() {
     stopAlerting()
 
-    val alertUri =
-      RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
-        ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
+    val customSoundUri = android.net.Uri.parse("android.resource://" + packageName + "/" + R.raw.mygate)
 
-    if (alertUri != null) {
+    if (customSoundUri != null) {
       mediaPlayer = MediaPlayer().apply {
         setAudioAttributes(
           AudioAttributes.Builder()
@@ -137,7 +135,7 @@ class VisitorAlertActivity : AppCompatActivity() {
             .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
             .build()
         )
-        setDataSource(this@VisitorAlertActivity, alertUri)
+        setDataSource(this@VisitorAlertActivity, customSoundUri)
         isLooping = true
         prepare()
         start()
