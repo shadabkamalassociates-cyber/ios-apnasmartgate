@@ -145,6 +145,48 @@ class VisitorLaunchModule(
     // Required by NativeEventEmitter.
   }
 
+  private var mediaPlayer: android.media.MediaPlayer? = null
+
+  @ReactMethod
+  fun playRingSound(promise: Promise) {
+    try {
+      if (mediaPlayer?.isPlaying == true) {
+        promise.resolve(null)
+        return
+      }
+      val customSoundUri = Uri.parse("android.resource://" + reactContext.packageName + "/" + R.raw.mygate)
+      mediaPlayer = android.media.MediaPlayer().apply {
+        setAudioAttributes(
+          android.media.AudioAttributes.Builder()
+            .setUsage(android.media.AudioAttributes.USAGE_ALARM)
+            .setContentType(android.media.AudioAttributes.CONTENT_TYPE_SONIFICATION)
+            .build()
+        )
+        setDataSource(reactContext, customSoundUri)
+        isLooping = true
+        prepare()
+        start()
+      }
+      promise.resolve(null)
+    } catch (e: Exception) {
+      promise.reject("PLAY_RING_FAILED", e)
+    }
+  }
+
+  @ReactMethod
+  fun stopRingSound(promise: Promise) {
+    try {
+      mediaPlayer?.runCatching {
+        if (isPlaying) stop()
+        release()
+      }
+      mediaPlayer = null
+      promise.resolve(null)
+    } catch (e: Exception) {
+      promise.reject("STOP_RING_FAILED", e)
+    }
+  }
+
   fun emitVisitorLaunch(payload: android.os.Bundle) {
     if (!reactContext.hasActiveReactInstance()) return
 

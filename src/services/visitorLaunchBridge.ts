@@ -9,6 +9,8 @@ type NativeVisitorLaunchModule = {
   cancelAllNotifications?: () => Promise<void>;
   isBatteryOptimizationDisabled?: () => Promise<boolean>;
   requestIgnoreBatteryOptimization?: () => Promise<boolean>;
+  playRingSound?: () => Promise<void>;
+  stopRingSound?: () => Promise<void>;
   addListener?: (eventName: string) => void;
   removeListeners?: (count: number) => void;
 };
@@ -67,4 +69,18 @@ export function subscribeVisitorLaunchOpened(
   return {
     remove: () => subscription.remove(),
   };
+}
+
+export async function playNativeRingSound(): Promise<void> {
+  if (!nativeModule?.playRingSound) return;
+  try {
+    await nativeModule.playRingSound();
+  } catch {}
+}
+
+export async function stopNativeRingSound(): Promise<void> {
+  if (!nativeModule?.stopRingSound) return;
+  try {
+    await nativeModule.stopRingSound();
+  } catch {}
 }

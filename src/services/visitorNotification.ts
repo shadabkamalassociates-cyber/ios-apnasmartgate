@@ -15,6 +15,8 @@ import {
   storeVisitorAlertPayload,
   canUseFullScreenIntent,
   showVisitorAlert,
+  playNativeRingSound,
+  stopNativeRingSound,
 } from './visitorLaunchBridge';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -166,7 +168,7 @@ export async function showGatePassNotification(
   // NEVER cancel after showing — NotificationManager.cancelAll() kills Notifee too.
   await cancelAllNativeNotifications();
   await notifee.cancelAllNotifications();
-  await new Promise<void>(resolve => setTimeout(() => resolve(), 500));
+  
   await cancelAllNativeNotifications();
   await notifee.cancelAllNotifications();
 
@@ -181,6 +183,8 @@ export async function showGatePassNotification(
       phone: payload.phone ?? '',
       vehicle: payload.vehicle ?? '',
     });
+    // Manually play the ring sound to bypass Android channel rate-limiting
+    playNativeRingSound();
   }
 
   // Now show OUR notification with Approve/Deny action buttons
@@ -261,20 +265,31 @@ export function handleNotificationNavigation(
   data?: Record<string, string> | { [key: string]: string },
   actionId?: string,
 ): void {
+  if (Platform.OS === 'android') {
+    stopNativeRingSound();
+  }
+
   if (!data) return;
 
   const visitorName = data.visitorName || data.name;
   const requestId = data.requestId || data.gatepassId;
 
-  if (visitorName && navigationRef.isReady()) {
-    navigationRef.navigate('ApproveDeny', {
-      visitorName,
-      requestId,
-      actionId,
-      phone: data.phone || undefined,
-      flat: data.flat || undefined,
-      vehicle: data.vehicle || undefined,
-    });
+  if (visitorName) {
+    const navigateWhenReady = () => {
+      if (navigationRef.isReady()) {
+        navigationRef.navigate('ApproveDeny', {
+          visitorName,
+          requestId,
+          actionId,
+          phone: data.phone || undefined,
+          flat: data.flat || undefined,
+          vehicle: data.vehicle || undefined,
+        });
+      } else {
+        setTimeout(navigateWhenReady, 100);
+      }
+    };
+    navigateWhenReady();
   }
 }
 
@@ -284,6 +299,10 @@ export async function handleNotificationAction(
   data?: Record<string, string> | { [key: string]: string },
   actionId?: string,
 ): Promise<void> {
+  if (Platform.OS === 'android') {
+    stopNativeRingSound();
+  }
+
   if (!data || !actionId) return;
   if (actionId !== 'approve' && actionId !== 'deny') return;
 
